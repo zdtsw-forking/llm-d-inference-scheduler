@@ -1,3 +1,4 @@
+
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
@@ -75,6 +76,8 @@ spec:
     value: 5d
   - name: enable-slack-failure-notification
     value: "false"
+  - name: rhel-subscription-activation-key
+    value: "rhel-subscription-activation-key-nonexistent"
   pipelineRef:
     resolver: git
     params:
