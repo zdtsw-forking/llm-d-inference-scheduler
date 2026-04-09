@@ -34,6 +34,8 @@ require (
 	sigs.k8s.io/gateway-api-inference-extension v1.4.0
 )
 
+replace sigs.k8s.io/gateway-api-inference-extension => github.com/red-hat-data-services/gateway-api-inference-extension v0.0.0-20260409231514-905fb67a04d5
+
 require (
 	cel.dev/expr v0.25.1 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
