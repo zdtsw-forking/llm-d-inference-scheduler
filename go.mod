@@ -31,8 +31,10 @@ require (
 	k8s.io/utils v0.0.0-20260108192941-914a6e750570
 	sigs.k8s.io/controller-runtime v0.23.3
 	sigs.k8s.io/gateway-api v1.5.1
-	sigs.k8s.io/gateway-api-inference-extension v0.0.0-20260316135939-f0ca6aef5114
+	sigs.k8s.io/gateway-api-inference-extension v1.4.0
 )
+
+replace sigs.k8s.io/gateway-api-inference-extension => github.com/red-hat-data-services/gateway-api-inference-extension v0.0.0-20260409231514-905fb67a04d5
 
 require (
 	cel.dev/expr v0.25.1 // indirect
