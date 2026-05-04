@@ -28,7 +28,7 @@ COPY version/  version/
 RUN go mod download
 
 # Build EPP
-RUN CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+RUN CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
        -ldflags="${LDFLAGS} -X github.com/llm-d/llm-d-inference-scheduler/version.CommitSHA=${COMMIT_SHA} -X github.com/llm-d/llm-d-inference-scheduler/version.BuildRef=${BUILD_REF}" \
        -o bin/epp cmd/epp/main.go
 
