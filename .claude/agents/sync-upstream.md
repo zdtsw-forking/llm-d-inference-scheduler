@@ -109,9 +109,41 @@ fi
 
 ## Conflict Resolution
 
-If step 7 produces merge conflicts:
+### OpenDataHub-owned files
 
-1. List conflicted files with `git -C "${REPO_PATH}" diff --name-only --diff-filter=U`
+The following files are opendatahub-specific and do **not** exist in upstream. During merge conflicts, **always keep the opendatahub/main version** automatically — never use the upstream version for these files:
+
+- `OWNERS`
+- `OWNERS_ALIASES`
+- `Dockerfile.epp.konflux`
+- `Dockerfile.sidecar.konflux`
+- `.tekton/**` (all files under `.tekton/`)
+
+To auto-resolve conflicts on these files:
+
+```bash
+ODH_OWNED_FILES="OWNERS OWNERS_ALIASES Dockerfile.epp.konflux Dockerfile.sidecar.konflux"
+
+# For each ODH-owned file that has a conflict, keep the opendatahub version
+for f in ${ODH_OWNED_FILES}; do
+  if git -C "${REPO_PATH}" diff --name-only --diff-filter=U | grep -q "^${f}$"; then
+    git -C "${REPO_PATH}" checkout --ours "${f}"
+    git -C "${REPO_PATH}" add "${f}"
+  fi
+done
+
+# Handle .tekton/ directory conflicts
+for f in $(git -C "${REPO_PATH}" diff --name-only --diff-filter=U | grep '^\.tekton/'); do
+  git -C "${REPO_PATH}" checkout --ours "${f}"
+  git -C "${REPO_PATH}" add "${f}"
+done
+```
+
+### Other conflicts
+
+If step 7 produces merge conflicts on files **not** in the ODH-owned list above:
+
+1. List remaining conflicted files with `git -C "${REPO_PATH}" diff --name-only --diff-filter=U`
 2. Show the conflicts to the user
 3. Attempt to resolve trivial conflicts automatically (whitespace, import order)
 4. For non-trivial conflicts, show the diff and ask the user how to resolve each file
