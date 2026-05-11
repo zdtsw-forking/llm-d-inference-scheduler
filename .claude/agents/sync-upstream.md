@@ -37,11 +37,12 @@ Ask the user: **"Sync to upstream/main HEAD or a specific commit SHA?"**
 6. **Create sync branch**: Create `sync/upstream-<short_sha>` based on `opendatahub/${ODH_BRANCH}`
 7. **Merge upstream**: Merge the target upstream commit into the sync branch. Resolve conflicts if needed
 8. **Verify merge**: Confirm merge completed successfully
-9. **Push branch**: Push to `origin`
-10. **Verify push**: Confirm branch was pushed successfully
-11. **Show PR summary**: Display what will be included in the PR
-12. **Confirm PR creation**: Ask the user whether to open a PR or stop with the branch pushed only
-13. **Open PR** (if confirmed): Open a PR to `opendatahub-io/llm-d-inference-scheduler` targeting `${ODH_BRANCH}`
+9. **Scan for conflict markers**: Scan all tracked files for leftover conflict markers (`<<<<`, `>>>>`, `====`) — git can sometimes report a clean merge when markers remain. If any are found, treat them as unresolved conflicts
+10. **Push branch**: Push to `origin`
+11. **Verify push**: Confirm branch was pushed successfully
+12. **Show PR summary**: Display what will be included in the PR
+13. **Confirm PR creation**: Ask the user whether to open a PR or stop with the branch pushed only
+14. **Open PR** (if confirmed): Open a PR to `opendatahub-io/llm-d-inference-scheduler` targeting `${ODH_BRANCH}`
 
 ## Commands
 
@@ -105,6 +106,20 @@ else
   echo "✗ Merge failed"
   exit 1
 fi
+
+# 9. Scan for leftover conflict markers
+# Git can sometimes report a clean merge when conflict markers remain.
+CONFLICT_FILES=$(git -C "${REPO_PATH}" grep -rlE '^(<{4,}|>{4,})' || true)
+if [ -n "${CONFLICT_FILES}" ]; then
+  echo "✗ Conflict markers found in the following files after merge:"
+  echo "${CONFLICT_FILES}"
+  echo ""
+  for f in ${CONFLICT_FILES}; do
+    echo "--- ${f} ---"
+    git -C "${REPO_PATH}" grep -nE '^(<{4,}|={4,}|>{4,})' "${f}"
+  done
+  # Treat as a merge conflict — show the markers to the user and ask how to resolve
+fi
 ```
 
 ## Conflict Resolution
@@ -156,10 +171,10 @@ If step 7 produces merge conflicts on files **not** in the ODH-owned list above:
 ## Push and Open PR
 
 ```bash
-# 9. Push to origin (user's fork)
+# 10. Push to origin (user's fork)
 git -C "${REPO_PATH}" push -u origin "${BRANCH}"
 
-# 10. Verify push succeeded
+# 11. Verify push succeeded
 if git -C "${REPO_PATH}" ls-remote --heads origin "${BRANCH}" | grep -q "${BRANCH}"; then
   echo "✓ Branch pushed successfully to origin/${BRANCH}"
 else
@@ -171,7 +186,7 @@ fi
 **Before creating the PR, show what will be included and ask the user whether to open a PR:**
 
 ```bash
-# 11. Show PR summary
+# 12. Show PR summary
 echo "=== PR Summary ==="
 echo "From: upstream/main (${FULL_SHA})"
 echo "To: opendatahub-io/llm-d-inference-scheduler ${ODH_BRANCH}"
@@ -188,11 +203,11 @@ git -C "${REPO_PATH}" diff --stat opendatahub/${ODH_BRANCH}..HEAD
 If the user chooses to open the PR:
 
 ```bash
-# 12. Get fork owner from origin remote URL
+# 13. Get fork owner from origin remote URL
 # NOTE: Do not use `gh repo view --json owner` — on forks it resolves to the parent repo owner.
 FORK_OWNER=$(git -C "${REPO_PATH}" remote get-url origin | sed -E 's|.*[:/]([^/]+)/[^/]+(.git)?$|\1|')
 
-# 13. Open PR to opendatahub-io
+# 14. Open PR to opendatahub-io
 gh pr create \
   --repo opendatahub-io/llm-d-inference-scheduler \
   --base "${ODH_BRANCH}" \
@@ -209,7 +224,7 @@ EOF
 After PR creation (or skip), immediately return to the original branch without asking:
 
 ```bash
-# 14. Return to the original branch
+# 15. Return to the original branch
 git -C "${REPO_PATH}" checkout "${ORIGINAL_BRANCH}"
 ```
 
