@@ -3,8 +3,6 @@ FROM registry.access.redhat.com/ubi9/go-toolset:1.25.8@sha256:8c5aeac74b4b60dc2e
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG COMMIT_SHA=unknown
-ARG BUILD_REF
 ARG LDFLAGS="-s -w"
 
 USER root
@@ -21,16 +19,11 @@ RUN go mod download
 # Copy the go source
 COPY cmd/ cmd/
 COPY pkg/ pkg/
-COPY internal/ internal/
-COPY pkg/      pkg/
-COPY version/  version/
 
 RUN go mod download
 
 # Build EPP
-RUN CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
-       -ldflags="${LDFLAGS} -X github.com/llm-d/llm-d-inference-scheduler/version.CommitSHA=${COMMIT_SHA} -X github.com/llm-d/llm-d-inference-scheduler/version.BuildRef=${BUILD_REF}" \
-       -o bin/epp cmd/epp/main.go
+RUN CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="${LDFLAGS}" -o bin/epp cmd/epp/main.go
 
 # Runtime stage
 FROM registry.access.redhat.com/ubi9/ubi-minimal:9.7@sha256:d91be7cea9f03a757d69ad7fcdfcd7849dba820110e7980d5e2a1f46ed06ea3b
